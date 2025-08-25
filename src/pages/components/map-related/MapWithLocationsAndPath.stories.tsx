@@ -1,11 +1,15 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
 import { MapWithLocationsAndPath } from './MapWithLocationsAndPath'
 import { filteredPositions, plannedRouteStops } from './mapStorybookData'
 
 const meta = {
   component: MapWithLocationsAndPath,
   title: 'Map/MapWithLocationsAndPath',
-  tags: ['autodocs'],
+  parameters: {
+    eyes: {
+      waitBeforeCapture: 15000,
+    },
+  },
   args: {
     plannedRouteStops: [],
     positions: [],
@@ -15,13 +19,13 @@ const meta = {
     positions: {
       control: false,
       table: {
-        type: { detail: '', summary: 'Point[]' },
+        type: { summary: 'Point[]' },
       },
     },
     plannedRouteStops: {
       control: false,
       table: {
-        type: { detail: '', summary: 'BusStop[]' },
+        type: { summary: 'BusStop[]' },
       },
     },
     showNavigationButtons: {

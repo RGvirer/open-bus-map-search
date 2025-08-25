@@ -1,42 +1,44 @@
-import { Meta, StoryObj } from '@storybook/react'
-import moment from 'moment'
+import { Meta, StoryObj } from '@storybook/react-vite'
+import { getPastDate } from '../../../.storybook/main'
 import { DateSelector } from './DateSelector'
+import dayjs from 'src/dayjs'
 
-const meta: Meta<typeof DateSelector> = {
+const meta = {
   title: 'Components/DateSelector',
   component: DateSelector,
   render: ({ time, minDate, ...args }) => {
     return (
-      <DateSelector {...args} time={moment(time)} minDate={minDate ? moment(minDate) : undefined} />
+      <DateSelector {...args} time={dayjs(time)} minDate={minDate ? dayjs(minDate) : undefined} />
     )
   },
   parameters: {
     layout: 'centered',
   },
   args: {
-    time: moment().startOf('day'),
+    time: dayjs(getPastDate()).startOf('day'),
+    onChange: () => {},
   },
   argTypes: {
     time: {
       control: 'date',
       description: 'The currently selected date',
       table: {
-        type: { summary: 'Moment' },
-        defaultValue: { summary: 'moment()' },
+        type: { summary: 'Dayjs' },
+        defaultValue: { summary: 'dayjs()' },
       },
     },
     onChange: {
       action: 'onChange',
       description: 'Callback function when date is changed',
       table: {
-        type: { summary: '(timeValid: moment.Moment | null) => void' },
+        type: { summary: '(timeValid: dayjs.Dayjs | null) => void' },
       },
     },
     minDate: {
       control: 'date',
       description: 'Minimum selectable date',
       table: {
-        type: { summary: 'Moment' },
+        type: { summary: 'Dayjs' },
       },
     },
     disabled: {
@@ -47,12 +49,11 @@ const meta: Meta<typeof DateSelector> = {
       },
     },
   },
-  tags: ['autodocs'],
-}
+} satisfies Meta<typeof DateSelector>
 
 export default meta
 
-type Story = StoryObj<typeof DateSelector>
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {}
 
@@ -64,7 +65,7 @@ export const Disabled: Story = {
 
 export const Invalid: Story = {
   args: {
-    time: moment().subtract(8, 'days').startOf('day'),
-    minDate: moment().subtract(7, 'days').startOf('day'),
+    time: dayjs(getPastDate()).subtract(8, 'days').startOf('day'),
+    minDate: dayjs(getPastDate()).subtract(7, 'days').startOf('day'),
   },
 }

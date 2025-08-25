@@ -1,13 +1,14 @@
 import i18next from 'i18next'
-import moment from 'moment'
-import TimelinePage from '../src/test_pages/TimelinePage'
-import { getPastDate, test, expect, urlMatcher, loadTranslate } from './utils'
+import { expect, getPastDate, loadTranslate, test, urlMatcher } from './utils'
+import TimelinePage from 'src/test_pages/TimelinePage'
+import dayjs from 'src/dayjs'
 
 test.describe('Timeline Page Tests', () => {
   let timelinePage: TimelinePage
 
   test.beforeEach(async ({ page, advancedRouteFromHAR }) => {
     await page.route(/google-analytics\.com|googletagmanager\.com/, (route) => route.abort())
+    await page.clock.setSystemTime(getPastDate())
     await loadTranslate(i18next)
     await advancedRouteFromHAR('tests/HAR/timeline.har', {
       updateContent: 'embed',
@@ -17,7 +18,6 @@ test.describe('Timeline Page Tests', () => {
       matcher: urlMatcher,
     })
     timelinePage = new TimelinePage(page) // Initialize timelinePage before each test
-    await timelinePage.setFakeTime(getPastDate())
     await page.goto('/')
     await page
       .getByText(i18next.t('timeline_page_title'), { exact: true })
@@ -158,8 +158,8 @@ test('the dateFrom parameter should be recent when visiting the "Trips history"'
   const request = await apiRequest
   const url = new URL(request.url())
   const dateFromParam = url.searchParams.get('date_from')
-  const dateFrom = moment(dateFromParam)
-  const daysAgo = moment().diff(dateFrom, 'days')
+  const dateFrom = dayjs(dateFromParam)
+  const daysAgo = dayjs().diff(dateFrom, 'days')
 
   expect(daysAgo).toBeGreaterThanOrEqual(0)
   expect(daysAgo).toBeLessThanOrEqual(3)

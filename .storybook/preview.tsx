@@ -1,4 +1,5 @@
-import type { Preview } from '@storybook/react'
+import type { Preview } from '@storybook/react-vite'
+import { initialize, mswLoader } from 'msw-storybook-addon'
 import { Suspense, useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router'
@@ -23,6 +24,14 @@ const queryClient = new QueryClient({
 queryClient.setQueryData(['version'], '1.2.3')
 
 const preview: Preview = {
+  beforeAll: () => {
+    initialize({
+      serviceWorker: {
+        url: './mockServiceWorker.js',
+      },
+    })
+  },
+  loaders: [mswLoader],
   parameters: {
     actions: { argTypesRegex: '^on[A-Z].*' },
     controls: {
@@ -31,15 +40,17 @@ const preview: Preview = {
         date: /Date$/i,
       },
     },
-    storySort: {
-      method: 'alphabetical',
+    options: {
+      storySort: {
+        method: 'alphabetical',
+      },
     },
   },
   decorators: [
     (Story, context) => {
       const { locale, darkMode } = context.globals
       return (
-        <Suspense>
+        <Suspense fallback={null}>
           <BrowserRouter>
             <QueryClientProvider client={queryClient}>
               <ThemeProvider>
@@ -53,6 +64,7 @@ const preview: Preview = {
       )
     },
   ],
+  tags: ['autodocs'],
 }
 
 export const globalTypes = {
@@ -84,8 +96,6 @@ export const globalTypes = {
   },
 }
 
-export default preview
-
 const StoryBookWrapper = ({
   darkMode,
   locale,
@@ -109,3 +119,5 @@ const StoryBookWrapper = ({
 
   return children
 }
+
+export default preview

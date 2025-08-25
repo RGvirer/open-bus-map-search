@@ -1,13 +1,14 @@
-import { useState } from 'react'
 import { DatePicker, DateValidationError } from '@mui/x-date-pickers'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import dayjs from 'src/dayjs'
 
 export type DataSelectorProps = {
-  time: moment.Moment
-  minDate?: moment.Moment
+  time: dayjs.Dayjs
+  minDate?: dayjs.Dayjs
   customLabel?: string
   disabled?: boolean
-  onChange: (timeValid: moment.Moment | null) => void
+  onChange: (timeValid: dayjs.Dayjs | null) => void
 }
 
 const getErrorMessageKey = (error?: DateValidationError) => {
@@ -19,6 +20,8 @@ const getErrorMessageKey = (error?: DateValidationError) => {
       return 'bug_date_invalid_format'
   }
 }
+
+const startOfTime = dayjs('1-1-2023')
 
 export function DateSelector({
   time,
@@ -35,11 +38,11 @@ export function DateSelector({
   return (
     <DatePicker
       value={time}
-      onChange={(ts) => onChange(ts)}
+      onChange={onChange}
       format="DD/MM/YYYY"
       label={customLabel || t('choose_date')}
       disableFuture
-      minDate={minDate}
+      minDate={minDate || startOfTime}
       disabled={disabled}
       onError={(err) => setError(err)}
       slotProps={{
@@ -47,7 +50,6 @@ export function DateSelector({
           sx: {
             '.MuiPickersCalendarHeader-labelContainer': {
               margin: '0',
-              marginInlineEnd: 'auto',
             },
           },
         },

@@ -15,7 +15,6 @@ test('An instruction video for Report a bug', async ({ page }) => {
     'https://www.youtube-nocookie.com/embed?v=F6sD9Bz4Xj0&list=PL6Rh06rT7uiX1AQE-lm55hy-seL3idx3T&index=11',
   )
   await page.locator('iframe').contentFrame().getByLabel('Play', { exact: true }).click()
-  await page.locator('iframe').contentFrame().getByLabel('Pause keyboard shortcut k').click()
   await page.getByLabel('Close', { exact: true }).click()
   await page.getByLabel('לפתוח סרטון על העמוד הזה').press('ControlOrMeta+c')
 })
@@ -26,14 +25,13 @@ test('bug missing field - request type', async ({ page }) => {
   })
 
   await test.step('Fill required fields', async () => {
-    await page.getByLabel('כותרת/סיכום').fill('Test')
+    await page.getByLabel('כותרת/סיכום').fill('Test!')
     await page.getByLabel('שם מלא').fill('Nils Holgerson')
     await page.getByLabel('אי-מייל').fill('Muli@gmail.com')
     await page.getByLabel('תיאור').fill('חסרות הנסיעות של המפקדת אקה')
     await page.getByLabel('סביבה (דפדפן, מערכת)').fill('כרום')
     await page.getByLabel('התנהגות צפויה').fill('אקה נודדת לארצות הקור')
     await page.getByLabel('התנהגות נוכחית').fill('לא קיימת')
-    await page.getByLabel('באיזו תדירות זה קורה?').fill('כל קיץ')
   })
 
   await test.step('Submit the form', async () => {
@@ -41,8 +39,9 @@ test('bug missing field - request type', async ({ page }) => {
   })
 
   await test.step('Verify missing field error', async () => {
-    const errorMessage = page.locator('.ant-form-item-explain-error')
-    await expect(errorMessage).toBeVisible()
-    await expect(errorMessage).toHaveText('אנא הזן סוג בקשה!')
+    const errorMessages = await page.locator('.ant-form-item-explain-error').allTextContents()
+    expect(errorMessages.length).toBe(2)
+    expect(errorMessages).toContain('בבקשה הזן סוג הבקשה')
+    expect(errorMessages).toContain('בבקשה הזן באיזו תדירות זה קורה')
   })
 })

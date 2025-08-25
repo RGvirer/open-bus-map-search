@@ -1,17 +1,13 @@
 import axios from 'axios'
-import moment, { Moment } from 'moment'
 import {
-  GtfsApi,
   GtfsRideStopPydanticModel,
   GtfsRideWithRelatedPydanticModel,
-} from 'open-bus-stride-client'
-import { API_CONFIG, BASE_PATH, MAX_HITS_COUNT } from 'src/api/apiConfig'
+} from '@hasadna/open-bus-api-client'
+import dayjs from 'src/dayjs'
+import { GTFS_API, MAX_HITS_COUNT, STRIDE_API_BASE_PATH } from 'src/api/apiConfig'
 import { BusRoute, fromGtfsRoute } from 'src/model/busRoute'
 import { BusStop, fromGtfsStop } from 'src/model/busStop'
-// import { Route } from 'react-router'
 
-const GTFS_API = new GtfsApi(API_CONFIG)
-//const USER_CASES_API = new UserCasesApi(API_CONFIG)
 const JOIN_SEPARATOR = ','
 const SEARCH_MARGIN_HOURS = 4
 
@@ -23,8 +19,8 @@ type StopHitsPayLoadType = {
 }
 
 export async function getRoutesAsync(
-  fromTimestamp: Moment,
-  toTimestamp: Moment,
+  fromTimestamp: dayjs.Dayjs,
+  toTimestamp: dayjs.Dayjs,
   operatorId?: string,
   lineNumber?: string,
   signal?: AbortSignal,
@@ -34,7 +30,7 @@ export async function getRoutesAsync(
       routeShortName: lineNumber,
       operatorRefs: operatorId,
       dateFrom: fromTimestamp.startOf('day').toDate(),
-      dateTo: moment.min(toTimestamp.endOf('day'), moment()).toDate(),
+      dateTo: dayjs.min(toTimestamp.endOf('day'), dayjs()).toDate(),
       limit: 100,
     },
     { signal },
@@ -66,15 +62,15 @@ export async function getRoutesAsync(
 
 export async function getStopsForRouteAsync(
   routeIds: number[],
-  timestamp: Moment,
+  timestamp: dayjs.Dayjs,
 ): Promise<BusStop[]> {
   const stops: BusStop[] = []
 
   for (const routeId of routeIds) {
     const rides = await GTFS_API.gtfsRidesListGet({
       gtfsRouteId: routeId,
-      startTimeFrom: moment(timestamp).subtract(1, 'days').second(0).milliseconds(0).toDate(),
-      startTimeTo: moment(timestamp).add(1, 'days').second(0).milliseconds(0).toDate(),
+      startTimeFrom: timestamp.subtract(1, 'day').second(0).millisecond(0).toDate(),
+      startTimeTo: timestamp.add(1, 'day').second(0).millisecond(0).toDate(),
       limit: 1,
       orderBy: 'start_time',
     })
@@ -100,21 +96,17 @@ export async function getStopsForRouteAsync(
   )
 }
 
-export async function getGtfsStopHitTimesAsync(stop: BusStop, timestamp: Moment) {
-  const targetStartTime = moment(timestamp).subtract(stop.minutesFromRouteStartTime, 'minutes')
+export async function getGtfsStopHitTimesAsync(stop: BusStop, timestamp: dayjs.Dayjs) {
+  const targetStartTime = timestamp.subtract(stop.minutesFromRouteStartTime, 'minute')
 
   const rides = await GTFS_API.gtfsRidesListGet({
     gtfsRouteId: stop.routeId,
-    startTimeFrom: moment(targetStartTime)
-      .subtract(SEARCH_MARGIN_HOURS, 'hours')
+    startTimeFrom: targetStartTime
+      .subtract(SEARCH_MARGIN_HOURS, 'hour')
       .second(0)
-      .milliseconds(0)
+      .millisecond(0)
       .toDate(),
-    startTimeTo: moment(targetStartTime)
-      .add(SEARCH_MARGIN_HOURS, 'hours')
-      .second(0)
-      .milliseconds(0)
-      .toDate(),
+    startTimeTo: targetStartTime.add(SEARCH_MARGIN_HOURS, 'hour').second(0).millisecond(0).toDate(),
     limit: 1024,
     orderBy: 'start_time asc',
   })
@@ -124,7 +116,7 @@ export async function getGtfsStopHitTimesAsync(stop: BusStop, timestamp: Moment)
   }
 
   const diffFromTargetStart = (ride: GtfsRideWithRelatedPydanticModel): number =>
-    Math.abs(timestamp.diff(ride.startTime, 'seconds'))
+    Math.abs(timestamp.diff(ride.startTime, 'second'))
 
   const closestInTimeRides = rides
     .sort((a, b) => diffFromTargetStart(a) - diffFromTargetStart(b))
@@ -149,7 +141,7 @@ export async function getGtfsStopHitTimesAsync(stop: BusStop, timestamp: Moment)
       arrival_time_to: maxEndTime,
     }
 
-    const stopHitsRes = await axios.get(`${BASE_PATH}/gtfs_ride_stops/list`, {
+    const stopHitsRes = await axios.get(`${STRIDE_API_BASE_PATH}/gtfs_ride_stops/list`, {
       params: stopHitsRequestPayLoad,
     })
 

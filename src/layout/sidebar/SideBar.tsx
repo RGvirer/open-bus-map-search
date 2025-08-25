@@ -3,7 +3,9 @@ import { Drawer, Layout } from 'antd'
 import { useContext, useState } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import cn from 'classnames'
 import { LayoutContextInterface, LayoutCtx } from '../LayoutContext'
+import { useTheme } from '../ThemeContext'
 import Menu from './menu/Menu'
 import { Logo } from './logo'
 import { PAGES } from 'src/routes'
@@ -12,9 +14,10 @@ const { Sider } = Layout
 const CollapsedLogo = () => <h1 className={'sidebar-logo-collapsed'}>🚌</h1>
 
 export default function SideBar() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { drawerOpen, setDrawerOpen } = useContext<LayoutContextInterface>(LayoutCtx)
   const [collapsed, setCollapsed] = useState(false)
+  const { isDarkTheme } = useTheme()
 
   return (
     <>
@@ -24,12 +27,11 @@ export default function SideBar() {
         width={280}
         onClose={() => setDrawerOpen(false)}
         open={drawerOpen}
-        className="hideOnDesktop"
+        rootClassName={cn('hideOnDesktop', { dark: isDarkTheme })}
         styles={{ body: { padding: '0' } }}>
-        <Logo />
-        <div className="sidebar-divider"></div>
+        <Logo title={t('website_name')} dark={isDarkTheme} />
+        <div className="sidebar-divider" />
         <Menu />
-        <div className="sidebar-divider"></div>
       </Drawer>
       <Sider
         theme="light"
@@ -38,15 +40,17 @@ export default function SideBar() {
         width={250}
         collapsible
         collapsed={collapsed}
-        style={{ overflowY: 'auto', marginBottom: '48px' }}
-        onCollapse={(value: boolean) => setCollapsed(value)}
-        className="hideOnMobile">
+        style={{
+          marginBottom: '48px',
+          boxShadow: isDarkTheme ? '0 0 12px 4px rgba(0,0,0,0.7)' : '0 0 12px 4px rgba(0,0,0,0.12)',
+        }}
+        onCollapse={setCollapsed}
+        className={cn('hideOnMobile', { dark: isDarkTheme })}>
         <Link to={PAGES[0].path} replace>
-          {collapsed ? <CollapsedLogo /> : <Logo />}
+          {collapsed ? <CollapsedLogo /> : <Logo title={t('website_name')} dark={isDarkTheme} />}
         </Link>
-        <div className="sidebar-divider"></div>
+        <div className="sidebar-divider" />
         <Menu />
-        <div className="sidebar-divider"></div>
       </Sider>
     </>
   )

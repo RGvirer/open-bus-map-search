@@ -1,10 +1,7 @@
 import { useState } from 'react'
 
-// Services and libraries
-import moment from 'moment'
 // Styling
 import './DashboardPage.scss'
-import 'src/App.scss'
 import { useTranslation } from 'react-i18next'
 import { Typography, Alert, Grid } from '@mui/material'
 import { useDate } from '../components/DateTimePicker'
@@ -18,17 +15,24 @@ import AllLinesChart from './AllLineschart/AllLinesChart'
 import WorstLinesChart from './WorstLinesChart/WorstLinesChart'
 import OperatorSelector from 'src/pages/components/OperatorSelector'
 
+// Services and libraries
+import dayjs from 'src/dayjs'
+
 // Declarations
-const now = moment()
+const now = dayjs()
 
 const DashboardPage = () => {
-  const [startDate, setStartDate] = useDate(now.clone().subtract(7, 'days'))
-  const [endDate, setEndDate] = useDate(now.clone().subtract(1, 'day'))
+  const [startDate, setStartDate] = useDate(now.subtract(7, 'day'))
+  const [endDate, setEndDate] = useDate(now.subtract(1, 'day'))
   const [operatorId, setOperatorId] = useState('')
   const { t } = useTranslation()
 
+  const [AllChartsZeroLines, setAllChartsZeroLines] = useState(false)
+  const [WorstLineZeroLines, setWorstLineZeroLines] = useState(false)
+  const [AllDayTimeChartZeroLines, setAllDayTimeChartZeroLines] = useState(false)
+
   return (
-    <PageContainer>
+    <PageContainer className="dashboard">
       <Typography className="page-title" variant="h4">
         {t('dashboard_page_title')}
         <InfoYoutubeModal
@@ -37,6 +41,11 @@ const DashboardPage = () => {
           videoUrl="https://www.youtube.com/embed/bXg50_j_hTA?si=4rpSZwMRbMomE4g1"
         />
       </Typography>
+      {AllChartsZeroLines && WorstLineZeroLines && AllDayTimeChartZeroLines ? (
+        <Alert severity="warning" variant="outlined">
+          {t('no_data_from_ETL')}
+        </Alert>
+      ) : null}
       <Alert severity="info" variant="outlined" icon={false}>
         {t('dashboard_page_description')}
       </Alert>
@@ -73,14 +82,28 @@ const DashboardPage = () => {
         </Grid>
       </Grid>
       <Grid container spacing={2} alignItems="flex-start">
-        <Grid size={{ xs: 12, lg: 6 }} className="widget">
-          <AllLinesChart startDate={startDate} endDate={endDate} />
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <AllLinesChart
+            startDate={startDate}
+            endDate={endDate}
+            alertAllChartsZeroLinesHandling={setAllChartsZeroLines}
+          />
         </Grid>
-        <Grid size={{ xs: 12, lg: 6 }} className="widget">
-          <WorstLinesChart startDate={startDate} endDate={endDate} operatorId={operatorId} />
+        <Grid size={{ xs: 12, lg: 6 }}>
+          <WorstLinesChart
+            startDate={startDate}
+            endDate={endDate}
+            operatorId={operatorId}
+            alertWorstLineHandling={setWorstLineZeroLines}
+          />
         </Grid>
-        <Grid size={{ xs: 12 }} className="widget">
-          <DayTimeChart startDate={startDate} endDate={endDate} operatorId={operatorId} />
+        <Grid size={{ xs: 12 }}>
+          <DayTimeChart
+            startDate={startDate}
+            endDate={endDate}
+            operatorId={operatorId}
+            alertAllDayTimeChartHandling={setAllDayTimeChartZeroLines}
+          />
         </Grid>
       </Grid>
     </PageContainer>

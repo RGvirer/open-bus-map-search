@@ -1,35 +1,35 @@
-import React, { useMemo, useState } from 'react'
-import moment from 'moment'
 import { Grid } from '@mui/material'
-import { useTranslation } from 'react-i18next'
+import { GtfsAgencyPydanticModel } from '@hasadna/open-bus-api-client'
 import { Skeleton } from 'antd'
+import React, { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Area,
-  Tooltip,
   AreaChart,
   CartesianGrid,
   ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
 } from 'recharts'
 import { DateSelector } from '../components/DateSelector'
 import { useDate } from '../components/DateTimePicker'
+import OperatorSelector from '../components/OperatorSelector'
 import { PageContainer } from '../components/PageContainer'
 import { getColorName } from '../dashboard/AllLineschart/OperatorHbarChart/OperatorHbarChart'
-import './DataResearch.scss'
-import OperatorSelector from '../components/OperatorSelector'
 import { useGroupBy } from 'src/api/groupByService'
 import Widget from 'src/shared/Widget'
+import dayjs from 'src/dayjs'
+import './DataResearch.scss'
 
-const now = moment()
+const now = dayjs()
 const unique: (value: string, index: number, self: string[]) => boolean = (value, index, self) =>
   self.indexOf(value) === index
 
 export const DataResearch = () => {
   return (
     <PageContainer>
-      <Widget>
-        <h1>מחקרים</h1>
+      <Widget title="מחקרים">
         <p>אם יש לכם רעיון מעניין למה קורים פה דברים, דברו איתנו בסלאק!</p>
       </Widget>
       <StackedResearchSection />
@@ -41,7 +41,7 @@ function StackedResearchSection() {
   const [startDate, setStartDate] = useDate(now.clone().subtract(7, 'days'))
   const [endDate, setEndDate] = useDate(now.clone().subtract(1, 'day'))
   const [operatorId, setOperatorId] = useState('')
-  const [groupByHour, setGroupByHour] = React.useState<boolean>(false)
+  const [groupByHour, setGroupByHour] = useState<boolean>(false)
   const [graphData, loadingGraph] = useGroupBy({
     dateTo: endDate,
     dateFrom: startDate,
@@ -49,8 +49,7 @@ function StackedResearchSection() {
   })
 
   return (
-    <Widget>
-      <h1>בעיות etl/gps/משהו גלובאלי אחר</h1>
+    <Widget title="בעיות etl/gps/משהו גלובאלי אחר" marginBottom>
       <StackedResearchInputs
         startDate={startDate}
         setStartDate={setStartDate}
@@ -99,10 +98,10 @@ function StackedResearchInputs({
   operatorId,
   setOperatorId,
 }: {
-  startDate: moment.Moment
-  setStartDate: (date: moment.Moment) => void
-  endDate: moment.Moment
-  setEndDate: (date: moment.Moment) => void
+  startDate: dayjs.Dayjs
+  setStartDate: (date: dayjs.Dayjs) => void
+  endDate: dayjs.Dayjs
+  setEndDate: (date: dayjs.Dayjs) => void
   groupByHour: boolean
   setGroupByHour: (value: boolean) => void
   operatorId: string
@@ -111,15 +110,15 @@ function StackedResearchInputs({
   const { t } = useTranslation()
   return (
     <>
-      <Grid container>
-        <Grid size={{ xs: 6 }}>
+      <Grid container gap={2}>
+        <Grid size={{ md: 'grow', xs: 12 }}>
           <DateSelector
             time={startDate}
             onChange={(data) => data && setStartDate(data)}
             customLabel={t('start')}
           />
         </Grid>
-        <Grid size={{ xs: 6 }}>
+        <Grid size={{ md: 'grow', xs: 12 }}>
           <DateSelector
             time={endDate}
             onChange={(data) => data && setEndDate(data)}
@@ -151,10 +150,7 @@ const StackedResearchChart = ({
   graphData: {
     gtfs_route_date: string
     gtfs_route_hour: string
-    operator_ref?: {
-      agency_id?: string
-      agency_name?: string
-    }
+    operator_ref?: GtfsAgencyPydanticModel
     total_actual_rides: number
     total_planned_rides: number
   }[]
@@ -167,7 +163,9 @@ const StackedResearchChart = ({
   const filteredGraphData =
     agencyId == ''
       ? graphData
-      : graphData.filter((dataRecord) => dataRecord.operator_ref?.agency_id === agencyId)
+      : graphData.filter(
+          (dataRecord) => dataRecord.operator_ref?.operatorRef.toString() === agencyId,
+        )
   const data = useMemo(
     () =>
       filteredGraphData
@@ -180,11 +178,11 @@ const StackedResearchChart = ({
             const date = curr.gtfs_route_date ?? curr.gtfs_route_hour
             const entry = acc.find((item) => item.date === date)
             if (entry) {
-              if (val) entry[curr.operator_ref?.agency_name || 'Unknown'] = val
+              if (val) entry[curr.operator_ref?.operatorRef || 'Unknown'] = val
             } else {
               const newEntry = {
                 date: date,
-                [curr.operator_ref?.agency_name || 'Unknown']: val,
+                [curr.operator_ref?.agencyName || 'Unknown']: val,
               }
               acc.push(newEntry)
             }
@@ -201,7 +199,7 @@ const StackedResearchChart = ({
   )
 
   const operators = filteredGraphData
-    .map((operator) => operator.operator_ref?.agency_name || 'Unknown')
+    .map((operator) => operator.operator_ref?.agencyName || 'Unknown')
     .filter(unique)
 
   return (

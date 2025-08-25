@@ -1,17 +1,16 @@
-import type { Meta, StoryObj } from '@storybook/react'
+import type { Meta, StoryObj } from '@storybook/react-vite'
 import { Suspense } from 'react'
 import Preloader from 'src/shared/Preloader'
 
 const css = `.preloader{width:80px;height:80px;border:2px solid #f3f3f3;border-top:3px solid #f25a41;border-radius:100%;top:0;bottom:0;left:0;right:0;margin:auto;animation:1s linear infinite spin}@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}.preloader-bus{position:absolute;top:50%;left:50%;font-size:25px;transform:translate(-50%,-50%)}`
 
-const meta: Meta<typeof Preloader> = {
+const meta = {
   component: Preloader,
   title: 'Components/Preloader',
-  tags: ['autodocs'],
   parameters: {
     layout: 'centered',
   },
-}
+} satisfies Meta<typeof Preloader>
 
 export default meta
 
@@ -31,6 +30,11 @@ export const Default: Story = {
 }
 
 export const WithSlowComponent: Story = {
+  parameters: {
+    eyes: {
+      waitBeforeCapture: '#slow',
+    },
+  },
   decorators: [
     (Story) => {
       return (
@@ -50,13 +54,12 @@ let promise: Promise<void> | null = null
 
 const useTimeout = (ms: number) => {
   if (!fulfilled) {
-    // eslint-disable-next-line @typescript-eslint/only-throw-error
     throw (promise ||= new Promise((resolve) => {
       setTimeout(() => {
         fulfilled = true
         resolve()
       }, ms)
-    }))
+    })) as unknown as Error
   }
 }
 
@@ -65,6 +68,7 @@ const SlowComponent = () => {
 
   return (
     <div
+      id="slow"
       dir="ltr"
       style={{
         padding: '1rem',

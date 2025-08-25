@@ -15,7 +15,12 @@ const compat = new FlatCompat({
 })
 
 export default [
-  ...compat.extends('plugin:@typescript-eslint/recommended', 'plugin:react/recommended'),
+  ...compat.extends(
+    'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    'plugin:react/recommended',
+    'plugin:storybook/recommended',
+  ),
   eslintPluginPrettierRecommended,
   {
     ignores: [
@@ -24,10 +29,11 @@ export default [
       'test-results',
       'playwright-report',
       'storybook-static',
-      '.nx',
-      'jest.config.ts',
-      '**/*.js',
       'public',
+      '.nx',
+      '**/*.js',
+      '*.js',
+      '*.cjs',
     ],
   },
   {
@@ -40,7 +46,10 @@ export default [
     },
   },
   {
-    settings: { 'import/resolver': { typescript: true }, react: { version: 'detect' } },
+    settings: {
+      'import/resolver': { typescript: true },
+      react: { version: 'detect' },
+    },
     languageOptions: {
       parser: typescriptEslintParser,
       parserOptions: {
@@ -53,34 +62,22 @@ export default [
   },
   {
     rules: {
-      ...typescriptEslintEslintPlugin.configs.recommended.rules,
-      ...typescriptEslintEslintPlugin.configs['recommended-requiring-type-checking'].rules,
-      ...eslintPluginReact.configs.recommended.rules,
+      // React
       'react-hooks/rules-of-hooks': 'error',
-      'react/jsx-filename-extension': [1, { extensions: ['.tsx'] }],
+      'react/jsx-filename-extension': ['warn', { extensions: ['.tsx'] }],
       'react/react-in-jsx-scope': 'off',
+      // TypeScript
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unsafe-call': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/no-floating-promises': 'off',
-      '@typescript-eslint/restrict-template-expressions': 'off',
       '@typescript-eslint/no-base-to-string': 'off',
       '@typescript-eslint/no-unsafe-assignment': 'off',
+      // Import
       'import/no-unused-modules': 'error',
       'import/order': 'error',
-      'prettier/prettier': [
-        'error',
-        {
-          semi: false,
-          tabWidth: 2,
-          printWidth: 100,
-          singleQuote: true,
-          trailingComma: 'all',
-          bracketSameLine: true,
-          jsxSingleQuote: false,
-          endOfLine: 'auto',
-        },
-      ],
+      // Prettier
+      'prettier/prettier': 'error',
     },
   },
 ]
